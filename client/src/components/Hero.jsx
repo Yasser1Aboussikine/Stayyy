@@ -1,5 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { assets, cities } from "../assets/assets";
+
+const TypingEffect = ({ text, speed = 350 }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText((prev) => prev + text[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, speed]);
+
+  return (
+    <h1 className="font-playfair text-2xl md:text-5x md:text-[56px] md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
+      {displayText}
+      <span className="animate-pulse">|</span>
+    </h1>
+  );
+};
 
 const Hero = () => {
   return (
@@ -9,7 +31,7 @@ const Hero = () => {
         className="absolute inset-0 bg-[url('/src/assets/homeImg.jpg')] 
          bg-no-repeat bg-cover bg-center"
         style={{
-          filter: "brightness(0.7) contrast(1.1)",
+          filter: "brightness(0.5) contrast(1.1)",
         }}
       />
 
@@ -21,12 +43,10 @@ const Hero = () => {
         <p className="bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20">
           The Ultimate Hotel Experience
         </p>
-        <h1
-          className="font-playfair text-2xl md:text-5x md:text-[56px]
-          md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4"
-        >
-          Discover Your Perfect Gateway Destination
-        </h1>
+        <TypingEffect
+          text="Discover Your Perfect Gateway Destination"
+          speed={80}
+        />
         <p className="max-w-130 mt-2 text-sm md:text-base">
           Unparalled luxury and comfort await at the world's most exclusive
           hotels and resorts. Start your journey today.
