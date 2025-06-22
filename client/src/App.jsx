@@ -9,6 +9,8 @@ function App() {
     <>
       {!isAdminPath && <Navbar />}
       <Hero />
+      <Hero />
+
     </>
   );
 }

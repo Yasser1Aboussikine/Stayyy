@@ -43,6 +43,7 @@ const Hero = () => {
         <p className="bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20">
           The Ultimate Hotel Experience
         </p>
+        {/* added some typing effects for better UI*/}
         <TypingEffect
           text="Discover Your Perfect Gateway Destination"
           speed={80}
