@@ -71,6 +71,7 @@ export const assets = {
   uploadArea,
   totalBookingIcon,
   totalRevenueIcon,
+  roomImg1
 };
 
 export const cities = ["Dubai", "Singapore", "New York", "London"];
@@ -198,6 +199,14 @@ export const hotelDummyData = {
   __v: 0,
 };
 
+  // const room = {
+  //   _id: 1111111111,
+  //   hotel_name: "Yasser Hotel",
+  //   rating: 4.9,
+  //   images: [assets.roomImg1],
+  //   hotel_address: "494 Falor Circle",
+  //   pricePerNight: 199
+  // };
 // Rooms Dummy Data
 export const roomsDummyData = [
   {
@@ -210,6 +219,7 @@ export const roomsDummyData = [
     isAvailable: true,
     createdAt: "2025-04-10T06:26:04.013Z",
     updatedAt: "2025-04-10T06:26:04.013Z",
+    rating: 4.2,
     __v: 0,
   },
   {
@@ -222,6 +232,7 @@ export const roomsDummyData = [
     isAvailable: true,
     createdAt: "2025-04-10T06:25:22.593Z",
     updatedAt: "2025-04-10T06:25:22.593Z",
+    rating: 4.7,
     __v: 0,
   },
   {
@@ -234,6 +245,7 @@ export const roomsDummyData = [
     isAvailable: true,
     createdAt: "2025-04-10T06:24:06.285Z",
     updatedAt: "2025-04-10T06:24:06.285Z",
+    rating: 4.8,
     __v: 0,
   },
   {
@@ -246,6 +258,7 @@ export const roomsDummyData = [
     isAvailable: true,
     createdAt: "2025-04-10T06:23:20.252Z",
     updatedAt: "2025-04-10T06:23:20.252Z",
+    rating: 3.5,
     __v: 0,
   },
 ];

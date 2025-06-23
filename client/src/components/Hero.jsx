@@ -4,7 +4,8 @@ import { assets, cities } from "../assets/assets";
 const TypingEffect = ({ text, speed = 350 }) => {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  
+  //writing effect
   useEffect(() => {
     if (currentIndex < text.length) {
       const timeout = setTimeout(() => {
