@@ -22,7 +22,7 @@ const FeaturedDestinations = () => {
         </div>
         <div className="flex justify-center mt-12">
           <button
-            onClick={() => {
+            onClick={() => { 
               navigate("/rooms");
               scrollTo(0, 0);
             }}

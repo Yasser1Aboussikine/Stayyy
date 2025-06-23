@@ -2,9 +2,12 @@ import React from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import { useLocation } from "react-router-dom";
-import HotelCard from "./components/HotelCard";
 import FeaturedDestinations from "./components/FeaturedDestinations";
-import { assets } from "./assets/assets";
+import ExclusiveOffers from "./components/ExclusiveOffers";
+import Testimonials from "./components/Testimonials";
+import ContactUs from "./components/ContactUs";
+import Footer from "./components/Footer";
+
 function App() {
   // will be used to hide nav bar for admin view
   const isAdminPath = useLocation().pathname.includes("owner");
@@ -20,9 +23,11 @@ function App() {
     <>
       {!isAdminPath && <Navbar />}
       <Hero />
-
       <FeaturedDestinations />
-
+      <ExclusiveOffers />
+      <Testimonials />
+      <ContactUs />
+      <Footer />
     </>
   );
 }

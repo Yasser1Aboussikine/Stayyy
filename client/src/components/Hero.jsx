@@ -4,7 +4,7 @@ import { assets, cities } from "../assets/assets";
 const TypingEffect = ({ text, speed = 350 }) => {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
-  
+
   //writing effect
   useEffect(() => {
     if (currentIndex < text.length) {
@@ -54,17 +54,26 @@ const Hero = () => {
           hotels and resorts. Start your journey today.
         </p>
 
-        <form className="bg-white text-gray-500 rounded-lg px-6 py-4 mt-8 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto">
-          <div>
-            <div className="flex items-center gap-2">
-              <img src={assets.calenderIcon} alt="" className="h-4" />
-              <label htmlFor="destinationInput">Destination</label>
+        <form className="bg-white/90 text-gray-700 rounded-2xl shadow-xl px-4 py-3 mt-10 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto border border-[#49B9FF]/10 backdrop-blur-md mx-auto w-full max-w-4xl">
+          <div className="flex flex-col min-w-[180px]">
+            <div className="flex items-center gap-2 mb-1">
+              <img
+                src={assets.calenderIcon}
+                alt=""
+                className="h-5 w-5 text-[#49B9FF]"
+              />
+              <label
+                htmlFor="destinationInput"
+                className="font-semibold text-base"
+              >
+                Destination
+              </label>
             </div>
             <input
               list="destinations"
               id="destinationInput"
               type="text"
-              className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
+              className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
               placeholder="Type here"
               required
             />
@@ -75,44 +84,58 @@ const Hero = () => {
             </datalist>
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <img src={assets.calenderIcon} alt="" className="h-4" />
-              <label htmlFor="checkIn">Check in</label>
+          <div className="flex flex-col min-w-[160px]">
+            <div className="flex items-center gap-2 mb-1">
+              <img
+                src={assets.calenderIcon}
+                alt=""
+                className="h-5 w-5 text-[#49B9FF]"
+              />
+              <label htmlFor="checkIn" className="font-semibold text-base">
+                Check in
+              </label>
             </div>
             <input
               id="checkIn"
               type="date"
-              className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
+              className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
             />
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <img src={assets.calenderIcon} alt="" className="h-4" />
-              <label htmlFor="checkOut">Check out</label>
+          <div className="flex flex-col min-w-[160px]">
+            <div className="flex items-center gap-2 mb-1">
+              <img
+                src={assets.calenderIcon}
+                alt=""
+                className="h-5 w-5 text-[#49B9FF]"
+              />
+              <label htmlFor="checkOut" className="font-semibold text-base">
+                Check out
+              </label>
             </div>
             <input
               id="checkOut"
               type="date"
-              className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
+              className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
             />
           </div>
 
-          <div className="flex md:flex-col max-md:gap-2 max-md:items-center">
-            <label htmlFor="guests">Guests</label>
+          <div className="flex flex-col min-w-[100px]">
+            <label htmlFor="guests" className="font-semibold text-base mb-1">
+              Guests
+            </label>
             <input
               min={1}
               max={4}
               id="guests"
               type="number"
-              className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none  max-w-16"
+              className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none max-w-16 focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
               placeholder="0"
             />
           </div>
 
-          <button className="flex items-center justify-center gap-1 rounded-md bg-black py-3 px-4 text-white my-auto cursor-pointer max-md:w-full max-md:py-1">
-            <img src={assets.searchIcon} alt="searchIcon" className="h-7" />
+          <button className="flex items-center justify-center gap-2 rounded-2xl bg-[#49B9FF] py-3 px-7 text-white font-bold text-lg my-auto cursor-pointer max-md:w-full max-md:py-2 shadow-lg hover:bg-[#2386c8] transition-all">
+            <img src={assets.searchIcon} alt="searchIcon" className="h-6 w-6" />
             <span>Search</span>
           </button>
         </form>
