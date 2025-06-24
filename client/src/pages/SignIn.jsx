@@ -1,14 +1,50 @@
-import { React, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const SignIn = () => {
   const formRef = useRef(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    formRef.current.focus();
+    formRef.current?.focus();
   }, []);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        navigate("/");
+      } else {
+        setError(result.error);
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full bg-gradient-to-br from-[#eaf6fd] via-white to-[#f4faff]">
@@ -23,7 +59,10 @@ const SignIn = () => {
 
       {/* Form Section */}
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center py-10 px-4 sm:px-8">
-        <form className="w-full max-w-xs sm:max-w-sm md:max-w-md flex flex-col items-center justify-center bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-xs sm:max-w-sm md:max-w-md flex flex-col items-center justify-center bg-white rounded-2xl shadow-xl p-6 sm:p-8"
+        >
           {/* Logo */}
           <img
             src={assets.logo}
@@ -37,6 +76,13 @@ const SignIn = () => {
             Welcome back! Please sign in to continue
           </p>
 
+          {/* Error Message */}
+          {error && (
+            <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
           <button
             type="button"
             className="w-full mb-6 bg-gray-500/10 flex items-center justify-center h-12 rounded-full hover:bg-gray-200 cursor-pointer transition-all"
@@ -46,7 +92,7 @@ const SignIn = () => {
               alt="googleLogo"
               className="h-5 w-5 mr-2"
             />
-            <span className="text-gray-700 font-medium ">
+            <span className="text-gray-700 font-medium">
               Sign in with Google
             </span>
           </button>
@@ -76,6 +122,9 @@ const SignIn = () => {
             </svg>
             <input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="Enter your email"
               className="bg-transparent text-gray-700 placeholder-gray-500/80 outline-none text-sm w-full h-full"
               ref={formRef}
@@ -98,6 +147,9 @@ const SignIn = () => {
             </svg>
             <input
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Password"
               className="bg-transparent text-gray-700 placeholder-gray-500/80 outline-none text-sm w-full h-full"
               required
@@ -125,9 +177,10 @@ const SignIn = () => {
 
           <button
             type="submit"
-            className="mt-6 w-full h-11 rounded-full text-white bg-indigo-500 hover:bg-indigo-600 transition font-semibold text-base shadow-lg"
+            disabled={loading}
+            className="mt-6 w-full h-11 rounded-full text-white bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-400 transition font-semibold text-base shadow-lg"
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
           <p className="text-gray-500/90 text-xs mt-4 text-center">
             Don't have an account?{" "}

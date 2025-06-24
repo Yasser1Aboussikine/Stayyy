@@ -1,33 +1,67 @@
 import React, { useState, useRef, useEffect } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const SignUp = () => {
   const emailRef = useRef(null);
   const navigate = useNavigate();
+  const { signup } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("User");
-  const [rememberMe, setRememberMe]   = useState(false);
+  const [formData, setFormData] = useState({
+    userName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "client",
+  });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     emailRef.current?.focus();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
+    setError("");
+
+    // Password validation
+    if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
-    setError("");
-    const formData = { email, username, password, role, rememberMe };
-    console.log("User submitted:", formData);
-    // Send to backend / context / Clerk / Firebase etc.
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Remove confirmPassword before sending to API
+      const { confirmPassword, ...signupData } = formData;
+
+      const result = await signup(signupData);
+
+      if (result.success) {
+        navigate("/");
+      } else {
+        setError(result.error);
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,29 +87,33 @@ const SignUp = () => {
 
           {/* Error */}
           {error && (
-            <p className="text-red-500 text-sm mt-4 font-medium">{error}</p>
+            <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
           )}
 
-          {/* Email */}
+          {/* Username */}
           <div className="mt-6 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
             <input
-              ref={emailRef}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              placeholder="Email"
+              type="text"
+              name="userName"
+              value={formData.userName}
+              onChange={handleChange}
+              placeholder="Username"
               className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
               required
             />
           </div>
 
-          {/* Username */}
+          {/* Email */}
           <div className="mt-4 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              type="text"
-              placeholder="Username"
+              ref={emailRef}
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email"
               className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
               required
             />
@@ -84,9 +122,10 @@ const SignUp = () => {
           {/* Password */}
           <div className="mt-4 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
             <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Password"
               className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
               required
@@ -96,9 +135,10 @@ const SignUp = () => {
           {/* Confirm Password */}
           <div className="mt-4 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
             <input
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
               type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
               placeholder="Confirm Password"
               className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
               required
@@ -109,43 +149,24 @@ const SignUp = () => {
           <div className="mt-4 w-full">
             <label className="text-sm text-gray-500 mb-1 block">Role</label>
             <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
               className="w-full border border-gray-300/60 text-sm rounded-full h-12 px-4 bg-transparent text-gray-700"
             >
-              <option value="User">User</option>
-              <option value="HotelOwner">Hotel Owner</option>
+              <option value="client">User</option>
+              <option value="hotelOwner">Hotel Owner</option>
+              <option value="admin">Admin</option>
             </select>
-          </div>
-
-          {/* Remember Me */}
-          <div className="w-full flex items-center justify-between mt-6 text-gray-500/80 text-xs">
-            <div className="flex items-center gap-2">
-              <input
-                className="h-4 w-4 accent-indigo-500"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={() => setRememberMe(!rememberMe)}
-                id="remember"
-              />
-              <label className="text-xs" htmlFor="remember">
-                Remember me
-              </label>
-            </div>
-            <a
-              className="text-xs underline hover:text-indigo-500 transition"
-              href="#"
-            >
-              Forgot password?
-            </a>
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            className="mt-6 w-full h-11 rounded-full text-white bg-indigo-500 hover:bg-indigo-600 transition font-semibold text-base shadow-lg"
+            disabled={loading}
+            className="mt-6 w-full h-11 rounded-full text-white bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-400 transition font-semibold text-base shadow-lg"
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
           {/* Already have an account */}
