@@ -1,32 +1,50 @@
 import React from "react";
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import { useLocation } from "react-router-dom";
-import FeaturedDestinations from "./components/FeaturedDestinations";
-import ExclusiveOffers from "./components/ExclusiveOffers";
-import Testimonials from "./components/Testimonials";
-import ContactUs from "./components/ContactUs";
-import Footer from "./components/Footer";
 import { Routes, Route } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
+// Import Components
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
+import MyBookings from "./pages/MyBookings";
+import SignUp from "./pages/SignUp";
+import SignIn from "./pages/SignIn";
+// Import Layouts
+import UserLayout from "./layouts/UserLayout";
+import AdminLayout from "./layouts/AdminLayout";
+
 
 function App() {
-  const location = useLocation();
+  const location = useLocation(); // You can use this for additional logic, but it’s not needed directly here
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      
       <main className="flex-1 w-full">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/hotels" element={<AllRooms />} />
-          <Route path="/rooms/:id" element={<RoomDetails />} />
-          {/* Add other routes here */}
+          {/* User Routes wrapped in UserLayout */}
+          <Route path="/" element={<UserLayout />}>
+            <Route index element={<Home />} />
+            <Route path="/hotels" element={<AllRooms />} />
+            <Route path="/bookings" element={<MyBookings />} />
+            <Route path="/rooms/:id" element={<RoomDetails />} />
+
+          </Route>
+
+          {/* Admin Routes wrapped in AdminLayout */}
+          <Route path="/admin/*" element={<AdminLayout />}>
+            {/* Define admin routes here */}
+            {/* Example: <Route path="/admin/dashboard" element={<Dashboard />} /> */}
+          </Route>
+
+          {/* Public route for SignUp */}
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signin" element={<SignIn />} />
+
         </Routes>
       </main>
-      <Footer />
+      
     </div>
   );
 }

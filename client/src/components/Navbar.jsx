@@ -164,7 +164,7 @@
               }`}
               onClick={openSignIn}
             >
-              Login
+              Sign In
             </button>
           )}
         </div>
@@ -240,10 +240,12 @@
             </UserButton>
           ) : (
             <button
-              className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
-              onClick={openSignIn}
+              className="bg-black text-white px-8 py-2.5 rounded-full cursor-pointer transition-all duration-500"
+                onClick={() =>
+                navigate('/signup')
+              }
             >
-              Login
+              Sign In
             </button>
           )}
           

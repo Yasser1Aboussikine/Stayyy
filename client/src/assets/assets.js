@@ -23,6 +23,8 @@ import badgeIcon from "./badgeIcon.svg";
 import menuIcon from "./menuIcon.svg";
 import closeMenu from "./closeMenu.svg";
 import guestsIcon from "./guestsIcon.svg";
+import sign_up from './sign_up.jpg';
+import sign_in from './sign_in.jpg';
 import roomImg1 from "./roomImg1.png";
 import roomImg2 from "./roomImg2.png";
 import roomImg3 from "./roomImg3.png";
@@ -40,6 +42,8 @@ import totalRevenueIcon from "./totalRevenueIcon.svg";
 import user_icon from "./user-icon-dummy.png"
 
 export const assets = {
+  sign_up,
+  sign_in,
   logo,
   searchIcon,
   userIcon,
