@@ -3,7 +3,10 @@ import { Phone, Mail, MapPin } from "lucide-react";
 
 const ContactUs = () => {
   return (
-    <section className="flex justify-center items-center min-h-[60vh] bg-gradient-to-t from-[#eaf6fd] via-white to-[#f4faff] py-20 px-4">
+    <section
+      id="contact-us"
+      className="flex justify-center items-center min-h-[60vh] bg-gradient-to-t from-[#eaf6fd] via-white to-[#f4faff] py-20 px-4"
+    >
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-[#49B9FF]/10 p-8 md:p-14 flex flex-col md:flex-row gap-12 md:gap-20">
         {/* Left Side: Contact Info */}
         <div className="flex-1 flex flex-col gap-8 justify-center">
@@ -131,7 +134,7 @@ const ContactUs = () => {
           <div>
             <button
               type="submit"
-              className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-base font-semibold rounded-full text-white bg-[#49B9FF] hover:bg-[#2386c8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#49B9FF] transition-colors"
+              className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-base font-semibold rounded-full text-white bg-[#49B9FF] hover:bg-[#2386c8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#49B9FF] cursor-pointer transition-colors"
             >
               Send Message
             </button>

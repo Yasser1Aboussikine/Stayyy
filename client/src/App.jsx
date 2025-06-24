@@ -7,28 +7,27 @@ import ExclusiveOffers from "./components/ExclusiveOffers";
 import Testimonials from "./components/Testimonials";
 import ContactUs from "./components/ContactUs";
 import Footer from "./components/Footer";
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import AllRooms from "./pages/AllRooms";
+import RoomDetails from "./pages/RoomDetails";
 
 function App() {
-  // will be used to hide nav bar for admin view
-  const isAdminPath = useLocation().pathname.includes("owner");
-  // const room = {
-  //   _id: 1111111111,
-  //   hotel_name: "Yasser Hotel",
-  //   rating: 4.9,
-  //   images: [assets.roomImg1],
-  //   hotel_address: "494 Falor Circle",
-  //   pricePerNight: 199
-  // };
+  const location = useLocation();
+
   return (
-    <>
-      {!isAdminPath && <Navbar />}
-      <Hero />
-      <FeaturedDestinations />
-      <ExclusiveOffers />
-      <Testimonials />
-      <ContactUs />
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-1 w-full">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/hotels" element={<AllRooms />} />
+          <Route path="/rooms/:id" element={<RoomDetails />} />
+          {/* Add other routes here */}
+        </Routes>
+      </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

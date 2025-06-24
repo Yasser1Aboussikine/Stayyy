@@ -12,11 +12,9 @@ const Footer = () => {
               alt="logo"
               className="h-9 transition-all duration-300 
                filter brightness-0 invert"
-        
             />
             <h1
               className="text-2xl font-bold tracking-wide transition-all duration-300text-white drop-shadow-lg"
-              
               style={{ fontFamily: "'Poppins', sans-serif" }}
             >
               Stayyy
@@ -116,8 +114,10 @@ const Footer = () => {
         </div>
       </div>
       <hr className="border-gray-300 mt-8" />
-      <div className="flex flex-col md:flex-row gap-2 items-center justify-between py-5">
-        <p>© {new Date().getFullYear()} QuickStay. All rights reserved.</p>
+      <div className="flex flex-col md:flex-row gap-2 items-center justify-center py-5">
+        <p className="text-center">
+          © {new Date().getFullYear()} Stayyy. All rights reserved.
+        </p>
         {/* <ul className="flex items-center gap-4">
           <li>
             <a href="#">Privacy</a>
