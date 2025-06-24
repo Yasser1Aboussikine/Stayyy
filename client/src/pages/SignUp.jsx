@@ -65,7 +65,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen w-full bg-gradient-to-br from-[#eaf6fd] via-white to-[#f4faff]">
+    <div className="flex flex-col md:flex-row min-h-screen w-full bg-gradient-to-br from-[#eaf6fd] via-white to-[#f4faff] ">
       {/* Form Section */}
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center py-10 px-4 sm:px-8">
         <form
@@ -76,7 +76,10 @@ const SignUp = () => {
           <img
             src={assets.logo}
             alt="Stayyy Logo"
-            className="h-10 sm:h-12 mb-3 sm:mb-4"
+            className="h-10 sm:h-12 mb-3 sm:mb-4 cursor-pointer"
+            onClick={() => {
+              navigate("/");
+            }}
           />
           <h2 className="text-3xl sm:text-4xl text-gray-900 font-bold font-playfair mb-2 text-center">
             Sign Up

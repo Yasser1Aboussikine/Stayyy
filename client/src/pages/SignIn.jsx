@@ -51,7 +51,7 @@ const SignIn = () => {
       {/* Image Section */}
       <div className="w-full md:w-1/2 flex-shrink-0 h-56 md:h-auto relative hidden md:block">
         <img
-          className="h-full w-full object-cover rounded-l-3xl shadow-2xl transition-all duration-300"
+          className="h-full w-full object-cover rounded-l-3xl shadow-2xl cursor-pointer transition-all duration-300"
           src={assets.sign_in}
           alt="sign-in img"
         />
@@ -67,7 +67,10 @@ const SignIn = () => {
           <img
             src={assets.logo}
             alt="Stayyy Logo"
-            className="h-10 sm:h-12 mb-3 sm:mb-4"
+            className="h-10 sm:h-12 mb-3 sm:mb-4 cursor-pointer"
+            onClick={() => {
+              navigate("/");
+            }}
           />
           <h2 className="text-3xl sm:text-4xl text-gray-900 font-bold font-playfair mb-2 text-center">
             Sign In
