@@ -37,6 +37,7 @@ import listIcon from "./listIcon.svg";
 import uploadArea from "./uploadArea.svg";
 import totalBookingIcon from "./totalBookingIcon.svg";
 import totalRevenueIcon from "./totalRevenueIcon.svg";
+import user_icon from "./user-icon-dummy.png"
 
 export const assets = {
   logo,
@@ -177,8 +178,7 @@ export const userDummyData = {
   _id: "user_2unqyL4diJFP1E3pIBnasc7w8hP",
   username: "Great Stack",
   email: "user.greatstack@gmail.com",
-  image:
-    "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJ2N2c5YVpSSEFVYVUxbmVYZ2JkSVVuWnFzWSJ9",
+  image: user_icon,
   role: "hotelOwner",
   createdAt: "2025-03-25T09:29:16.367Z",
   updatedAt: "2025-04-10T06:34:48.719Z",
