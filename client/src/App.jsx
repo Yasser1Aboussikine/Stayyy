@@ -16,8 +16,7 @@ import AdminLayout from "./layouts/AdminLayout";
 
 
 function App() {
-  const location = useLocation(); // You can use this for additional logic, but it’s not needed directly here
-
+ 
   return (
     <div className="flex flex-col min-h-screen">
       
