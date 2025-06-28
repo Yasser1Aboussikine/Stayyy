@@ -30,19 +30,16 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
-// Body parsing middleware
+
 router.use(express.json({ limit: "10mb" }));
 router.use(express.urlencoded({ extended: true, limit: "10mb" }));
-// Cookie parser middleware
 router.use(cookieParser());
 
-// Request logging middleware
 router.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// Health check endpoint
 router.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
@@ -69,7 +66,6 @@ router.use("/hotels", hotelsRoutes);
 router.use((err, req, res, next) => {
   console.error("API Error:", err);
 
-  // Handle specific error types
   if (err.name === "ValidationError") {
     return res.status(400).json({
       message: "Validation Error",
@@ -89,7 +85,6 @@ router.use((err, req, res, next) => {
     });
   }
 
-  // Default error response
   res.status(err.status || 500).json({
     message: err.message || "Internal server error",
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
