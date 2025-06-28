@@ -1,16 +1,15 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const JWT_SECRET = process.env.JWT_SECRET || "myverysecuresecretkey123";
+//remove the testing JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
 
-// Middleware to verify JWT token
 const authenticateToken = async (req, res, next) => {
   try {
-    // Check for token in Authorization header first
+
     const authHeader = req.headers["authorization"];
     let token = authHeader && authHeader.split(" ")[1];
 
-    // If no token in header, check cookies
     if (!token) {
       token = req.cookies.jwt;
     }
@@ -43,7 +42,6 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Middleware to check if user has specific role
 const requireRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -62,10 +60,10 @@ const requireRole = (roles) => {
   };
 };
 
-// Middleware to check if user is admin
+//to check if user is admin
 const requireAdmin = requireRole(["admin"]);
 
-// Middleware to check if user is client or admin
+//check if user is client or admin
 const requireClientOrAdmin = requireRole(["client", "admin"]);
 
 module.exports = {
