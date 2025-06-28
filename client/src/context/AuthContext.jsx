@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -24,14 +25,11 @@ export const AuthProvider = ({ children }) => {
       if (storedToken && storedUser) {
         try {
           // Verify token with backend
-          const response = await fetch(
-            "http://localhost:5173/api/auth/verify",
-            {
-              headers: {
-                Authorization: `Bearer ${storedToken}`,
-              },
-            }
-          );
+          const response = await fetch("/api/auth/verify", {
+            headers: {
+              Authorization: `Bearer ${storedToken}`,
+            },
+          });
 
           if (response.ok) {
             setToken(storedToken);
@@ -57,29 +55,14 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
-      const response = await fetch("http://localhost:5173/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
+      const data = await authAPI.signIn({ identifier, password });
       // Store token and user data
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
       setToken(data.token);
       setUser(data.user);
-
       return { success: true, user: data.user };
     } catch (error) {
       console.error("Login error:", error);
@@ -89,19 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (userData) => {
     try {
-      const response = await fetch("http://localhost:5173/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Signup failed");
-      }
+      const data = await authAPI.signUp(userData);
 
       // Store token and user data
       localStorage.setItem("token", data.token);

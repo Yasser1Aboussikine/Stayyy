@@ -3,47 +3,42 @@ import { Routes, Route } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
 // Import Components
-import Footer from "./components/Footer";
+
 import Home from "./pages/Home";
 import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
 import MyBookings from "./pages/MyBookings";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
-// Import Layouts
+import RouteNotFound from "./ErrorHandling/RouteNotFound";
 import UserLayout from "./layouts/UserLayout";
 import AdminLayout from "./layouts/AdminLayout";
+import { useAuth } from "./context/AuthContext";
 
 
 function App() {
- 
+  const { user } = useAuth();
   return (
     <div className="flex flex-col min-h-screen">
-      
       <main className="flex-1 w-full">
         <Routes>
-          {/* User Routes wrapped in UserLayout */}
           <Route path="/" element={<UserLayout />}>
             <Route index element={<Home />} />
             <Route path="/hotels" element={<AllRooms />} />
-            <Route path="/bookings" element={<MyBookings />} />
+
+            {user && <Route path="/bookings" element={<MyBookings />} />}
+
             <Route path="/rooms/:id" element={<RoomDetails />} />
-
           </Route>
 
-          {/* Admin Routes wrapped in AdminLayout */}
-          <Route path="/admin/*" element={<AdminLayout />}>
-            {/* Define admin routes here */}
-            {/* Example: <Route path="/admin/dashboard" element={<Dashboard />} /> */}
-          </Route>
+          <Route path="/admin/*" element={<AdminLayout />}></Route>
 
-          {/* Public route for SignUp */}
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
 
+          <Route path="*" element={<RouteNotFound />} />
         </Routes>
       </main>
-      
     </div>
   );
 }

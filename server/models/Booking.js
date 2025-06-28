@@ -12,11 +12,6 @@ const BookingSchema = new mongoose.Schema(
       ref: "Room",
       required: true,
     },
-    hotel: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Hotel",
-      required: true,
-    },
     checkInDate: {
       type: Date,
       required: true,
@@ -36,7 +31,7 @@ const BookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "cancelled"],
+      enum: ["pending", "confirmed", "cancelled", "completed"],
       default: "pending",
     },
     paymentMethod: {
@@ -47,6 +42,10 @@ const BookingSchema = new mongoose.Schema(
     isPaid: {
       type: Boolean,
       default: false,
+    },
+    specialRequests: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }

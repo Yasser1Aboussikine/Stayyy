@@ -5,18 +5,14 @@ const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
 
-// Import route modules
 const authRoutes = require("./auth.route");
 const bookingsRoutes = require("./bookings.route");
 const hotelsRoutes = require("./hotels.route");
 
-
-// Security middleware
 router.use(helmet());
 
-// CORS configuration
 const corsOptions = {
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  origin: process.env.CLIENT_URL,
   credentials: true,
   optionsSuccessStatus: 200,
   // methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -57,18 +53,17 @@ router.get("/health", (req, res) => {
 
 // Mount routes
 router.use("/auth", authRoutes);
-// router.use("/bookings", bookingsRoutes);
-// router.use("/hotels", hotelsRoutes);
-
+router.use("/bookings", bookingsRoutes);
+router.use("/hotels", hotelsRoutes);
 
 // 404 handler for API routes
-router.use("*", (req, res) => {
-  res.status(404).json({
-    message: "API endpoint not found",
-    path: req.originalUrl,
-    method: req.method,
-  });
-});
+// router.use("*", (req, res) => {
+//   res.status(404).json({
+//     message: "API endpoint not found",
+//     path: req.originalUrl,
+//     method: req.method,
+//   });
+// });
 
 // Error handling middleware
 router.use((err, req, res, next) => {

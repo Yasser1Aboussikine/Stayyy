@@ -1,38 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Title from "../components/Title";
-import { assets } from "../assets/assets";
+import { assets, facilityIcons } from "../assets/assets";
+import { useAuth } from "../context/AuthContext";
+import { bookingsAPI } from "../services/api";
+import StarRating from "../components/StarRating";
 
 const MyBookings = () => {
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const { user } = useAuth();
 
   // New state for bookings
-  const [bookingsData, setBookingsData] = useState(null);
+  const [bookingsData, setBookingsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [cancellingBooking, setCancellingBooking] = useState(null);
 
-  // Fetch user bookings using fetch
+  // Fetch user bookings using the API service
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/bookings");
-        let data;
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          data = await res.json();
-        } else {
-          const text = await res.text();
-          throw new Error(text || "Unknown error");
-        }
-        if (!res.ok) {
-          throw new Error(data.message || "Failed to fetch bookings");
-        }
-        setBookingsData(data);
+        const data = await bookingsAPI.getUserBookings();
+        setBookingsData(data.bookings || []);
       } catch (err) {
         setError(err.message || "Failed to fetch bookings");
+        console.error("Error fetching bookings:", err);
       } finally {
         setLoading(false);
       }
@@ -40,16 +35,38 @@ const MyBookings = () => {
     fetchBookings();
   }, []);
 
-  const bookings = bookingsData?.bookings || [];
-
   // Filter bookings by status
   const filteredBookings =
     selectedStatus === "all"
-      ? bookings
-      : bookings.filter((booking) => booking.status === selectedStatus);
+      ? bookingsData
+      : bookingsData.filter((booking) => booking.status === selectedStatus);
+
+  // Handle booking cancellation
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) {
+      return;
+    }
+
+    setCancellingBooking(bookingId);
+    try {
+      await bookingsAPI.cancelBooking(bookingId);
+      // Update the local state to reflect the cancellation
+      setBookingsData((prevBookings) =>
+        prevBookings.map((booking) =>
+          booking._id === bookingId
+            ? { ...booking, status: "cancelled" }
+            : booking
+        )
+      );
+    } catch (err) {
+      alert("Failed to cancel booking: " + err.message);
+    } finally {
+      setCancellingBooking(null);
+    }
+  };
 
   // Loading state
-  if (loading) {
+  if (loading && bookingsData.length === 0) {
     return (
       <div className="py-28 md:pb-35 md:pt-32 px-4 md:px-16 lg:px-24 xl:px-32">
         <Title
@@ -66,12 +83,12 @@ const MyBookings = () => {
   }
 
   // Error state
-  if (error) {
+  if (error && bookingsData.length === 0) {
     return (
       <div className="py-28 md:pb-35 md:pt-32 px-4 md:px-16 lg:px-24 xl:px-32">
         <Title
           align="center"
-          title="My Bookings"
+          title={user ? `My Bookings : ${user.userName}` : "My Bookings"}
           subTitle="Easily manage your past, current and upcoming hotel reservations
          in one place. Plan your tips seamlessly with just a few clicks"
         />
@@ -79,6 +96,12 @@ const MyBookings = () => {
           <div className="text-center">
             <p className="text-red-500 text-lg mb-4">Error loading bookings</p>
             <p className="text-gray-600">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 bg-[#49B9FF] text-white rounded-lg hover:bg-[#3a9be8] transition-colors"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </div>
@@ -181,23 +204,55 @@ const MyBookings = () => {
             {filteredBookings.map((booking) => (
               <div
                 key={booking._id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 grid grid-cols-1 md:grid-cols-[3fr_2fr_1fr] w-full border border-gray-100 py-8 px-4 md:px-8 my-6"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 grid grid-cols-1 md:grid-cols-[3fr_2fr_1fr] w-full border border-gray-100 py-8 px-4 md:px-8 my-6 cursor-pointer group hover:border-[#49B9FF]/30 relative"
+                onClick={() => navigate(`/rooms/${booking.room._id}`)}
               >
+                {/* Click indicator */}
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="flex items-center gap-1 text-[#49B9FF] text-xs font-medium">
+                    <span>View Details</span>
+                    <img
+                      src={assets.arrowIcon}
+                      alt="arrow"
+                      className="w-3 h-3"
+                    />
+                  </div>
+                </div>
+
                 {/* Hotel Details */}
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
-                  <img
-                    src={booking.room?.images?.[0] || assets.roomImg1}
-                    alt="hotel-img"
-                    className="w-32 h-24 md:w-44 md:h-32 rounded-xl shadow object-cover border-2 border-gray-100"
-                  />
+                  <div className="relative">
+                    <img
+                      src={booking.room?.images?.[0] || assets.roomImg1}
+                      alt="hotel-img"
+                      className="w-32 h-24 md:w-44 md:h-32 rounded-xl shadow object-cover border-2 border-gray-100 group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {/* Rating overlay */}
+                    {booking.room?.rating && (
+                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
+                        <div className="flex items-center gap-1">
+                          <StarRating
+                            rating={booking.room.rating}
+                            size="small"
+                          />
+                          <span className="text-xs font-medium text-gray-700">
+                            {booking.room.rating}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex flex-col gap-2 md:ml-4 w-full">
                     <p className="font-playfair text-xl md:text-2xl font-bold text-gray-800">
-                      {booking.room?.name || "Room"}
+                      {booking.room?.hotel?.name ||
+                        booking.room?.roomType ||
+                        "Room"}
                       <span className="font-inter text-sm font-normal text-gray-500 ml-2">
                         ({booking.room?.roomType || "Standard"})
                       </span>
                     </p>
+
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <img
                         src={assets.locationIcon}
@@ -205,10 +260,13 @@ const MyBookings = () => {
                         className="w-4 h-4"
                       />
                       <span>
+                        {booking.room?.hotel?.city &&
+                          `${booking.room.hotel.city}, `}
                         {booking.room?.hotel?.address ||
                           "Address not available"}
                       </span>
                     </div>
+
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <img
                         src={assets.guestsIcon}
@@ -217,9 +275,49 @@ const MyBookings = () => {
                       />
                       <span>Guests: {booking.guests}</span>
                     </div>
+
+                    {/* Room Amenities */}
+                    {booking.room?.amenities &&
+                      booking.room.amenities.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          {booking.room.amenities
+                            .slice(0, 3)
+                            .map((amenity, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#49B9FF]/10 border border-[#49B9FF]/20"
+                              >
+                                <img
+                                  src={
+                                    facilityIcons[amenity] ||
+                                    assets.freeWifiIcon
+                                  }
+                                  alt={amenity}
+                                  className="w-3 h-3"
+                                />
+                                <p className="text-xs font-medium text-gray-700">
+                                  {amenity}
+                                </p>
+                              </div>
+                            ))}
+                          {booking.room.amenities.length > 3 && (
+                            <span className="text-xs text-gray-500">
+                              +{booking.room.amenities.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                     <p className="text-base font-semibold text-indigo-600 mt-1">
                       Total: ${booking.totalPrice}
                     </p>
+
+                    {booking.specialRequests && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        <span className="font-medium">Special Requests:</span>{" "}
+                        {booking.specialRequests}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -235,6 +333,14 @@ const MyBookings = () => {
                     <p className="font-semibold text-gray-700">Check-Out:</p>
                     <p className="text-gray-500 text-sm">
                       {new Date(booking.checkOutDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-700">
+                      Payment Method:
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      {booking.paymentMethod}
                     </p>
                   </div>
                 </div>
@@ -264,21 +370,48 @@ const MyBookings = () => {
                   {/* Action buttons */}
                   <div className="flex flex-col gap-2 mt-2">
                     {booking.status === "pending" && !booking.isPaid && (
-                      <button className="px-4 py-2 text-xs font-semibold bg-gradient-to-r from-indigo-500 to-blue-400 text-white rounded-full shadow hover:from-blue-600 hover:to-indigo-600 transition-all cursor-pointer">
+                      <button
+                        className="px-4 py-2 text-xs font-semibold bg-gradient-to-r from-indigo-500 to-blue-400 text-white rounded-full shadow hover:from-blue-600 hover:to-indigo-600 transition-all cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Handle payment logic
+                        }}
+                      >
                         Pay Now
                       </button>
                     )}
                     {booking.status === "pending" && (
-                      <button className="px-4 py-2 text-xs font-semibold bg-red-500 text-white rounded-full shadow hover:bg-red-600 transition-all cursor-pointer">
-                        Cancel
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCancelBooking(booking._id);
+                        }}
+                        disabled={cancellingBooking === booking._id}
+                        className="px-4 py-2 text-xs font-semibold bg-red-500 text-white rounded-full shadow hover:bg-red-600 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {cancellingBooking === booking._id
+                          ? "Cancelling..."
+                          : "Cancel"}
                       </button>
                     )}
-                    {booking.status === "confirmed" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/rooms/${booking.room._id}`);
+                      }}
+                      className="px-4 py-2 text-xs font-semibold bg-[#49B9FF] text-white rounded-full shadow hover:bg-[#3a9be8] transition-all cursor-pointer"
+                    >
+                      View Room Details
+                    </button>
+                    {booking.status === "cancelled" && (
                       <button
-                        onClick={() => navigate(`/rooms/${booking.room._id}`)}
-                        className="px-4 py-2 text-xs font-semibold bg-[#49B9FF] text-white rounded-full shadow hover:bg-[#3a9be8] transition-all cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/hotels");
+                        }}
+                        className="px-4 py-2 text-xs font-semibold bg-green-500 text-white rounded-full shadow hover:bg-green-600 transition-all cursor-pointer"
                       >
-                        View Room
+                        Book Again
                       </button>
                     )}
                   </div>

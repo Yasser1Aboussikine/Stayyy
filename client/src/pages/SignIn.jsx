@@ -9,7 +9,7 @@ const SignIn = () => {
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
   const [error, setError] = useState("");
@@ -32,8 +32,8 @@ const SignIn = () => {
     setLoading(true);
 
     try {
-      const result = await login(formData.email, formData.password);
-      
+      const result = await login(formData.identifier, formData.password);
+
       if (result.success) {
         navigate("/");
       } else {
@@ -75,7 +75,7 @@ const SignIn = () => {
           <h2 className="text-3xl sm:text-4xl text-gray-900 font-bold font-playfair mb-2 text-center">
             Sign In
           </h2>
-          <p className="text-sm text-gray-500/90 mb-6 text-center">
+          <p className="text-sm text-gray-500/90 mb-6 text-center ">
             Welcome back! Please sign in to continue
           </p>
 
@@ -93,7 +93,7 @@ const SignIn = () => {
             <img
               src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/login/googleLogo.svg"
               alt="googleLogo"
-              className="h-5 w-5 mr-2"
+              className="h-5 w-15 mr-5"
             />
             <span className="text-gray-700 font-medium">
               Sign in with Google
@@ -124,11 +124,11 @@ const SignIn = () => {
               />
             </svg>
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              name="identifier"
+              value={formData.identifier}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="Email or Username"
               className="bg-transparent text-gray-700 placeholder-gray-500/80 outline-none text-sm w-full h-full"
               ref={formRef}
               required
@@ -171,7 +171,7 @@ const SignIn = () => {
               </label>
             </div>
             <a
-              className="text-xs underline hover:text-indigo-500 transition"
+              className="text-xs underline hover:text-indigo-500 transition cursor-pointer"
               href="#"
             >
               Forgot password?
@@ -181,15 +181,15 @@ const SignIn = () => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-6 w-full h-11 rounded-full text-white bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-400 transition font-semibold text-base shadow-lg"
+            className="mt-6 w-full h-11 rounded-full text-white bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-400 transition font-semibold text-base shadow-lg cursor-pointer"
           >
             {loading ? "Signing In..." : "Sign In"}
           </button>
           <p className="text-gray-500/90 text-xs mt-4 text-center">
-            Don't have an account?{" "}
+            Don't have an account?
             <button
               type="button"
-              className="text-indigo-400 hover:underline ml-1 transition"
+              className="text-indigo-400 hover:underline ml-1 cursor-pointer transition-all"
               onClick={() => navigate("/signup")}
             >
               Sign up

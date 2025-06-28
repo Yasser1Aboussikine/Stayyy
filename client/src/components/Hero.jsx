@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { assets, cities } from "../assets/assets";
+import { roomsAPI } from "../services/api";
 
 const TypingEffect = ({ text, speed = 350 }) => {
   const [displayText, setDisplayText] = useState("");
@@ -25,6 +27,98 @@ const TypingEffect = ({ text, speed = 350 }) => {
 };
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const [searchForm, setSearchForm] = useState({
+    destination: "",
+    checkIn: "",
+    checkOut: "",
+    guests: 1,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const validateForm = () => {
+    if (!searchForm.destination.trim()) {
+      setError("Please select a destination");
+      return false;
+    }
+    if (!searchForm.checkIn) {
+      setError("Please select check-in date");
+      return false;
+    }
+    if (!searchForm.checkOut) {
+      setError("Please select check-out date");
+      return false;
+    }
+    if (searchForm.guests < 1) {
+      setError("Please select at least 1 guest");
+      return false;
+    }
+
+    const checkIn = new Date(searchForm.checkIn);
+    const checkOut = new Date(searchForm.checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (checkIn < today) {
+      setError("Check-in date cannot be in the past");
+      return false;
+    }
+    if (checkOut <= checkIn) {
+      setError("Check-out date must be after check-in date");
+      return false;
+    }
+
+    setError("");
+    return true;
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Build search parameters
+      const searchParams = {
+        city: searchForm.destination,
+        checkInDate: searchForm.checkIn,
+        checkOutDate: searchForm.checkOut,
+        guests: searchForm.guests,
+        page: 1,
+        limit: 20,
+      };
+
+      // Navigate to search results page with parameters
+      const queryString = new URLSearchParams(searchParams).toString();
+      navigate(`/hotels?${queryString}`);
+    } catch (err) {
+      setError("Search failed. Please try again.");
+      console.error("Search error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Set minimum dates for date inputs
+  const today = new Date().toISOString().split("T")[0];
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
   return (
     <div className="relative h-screen">
       {/* Background image with filter */}
@@ -54,11 +148,21 @@ const Hero = () => {
           hotels and resorts. Start your journey today.
         </p>
 
-        <form className="bg-white/90 text-gray-700 rounded-2xl shadow-xl px-4 py-3 mt-10 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto border border-[#49B9FF]/10 backdrop-blur-md mx-auto w-full max-w-4xl">
+        <form
+          onSubmit={handleSearch}
+          className="bg-white/90 text-gray-700 rounded-2xl shadow-xl px-4 py-3 mt-10 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto border border-[#49B9FF]/10 backdrop-blur-md mx-auto w-full max-w-4xl"
+        >
+          {/* Error Message */}
+          {error && (
+            <div className="absolute -top-12 left-0 right-0 bg-red-500 text-white px-4 py-2 rounded-lg text-sm text-center">
+              {error}
+            </div>
+          )}
+
           <div className="flex flex-col min-w-[180px]">
             <div className="flex items-center gap-2 mb-1">
               <img
-                src={assets.calenderIcon}
+                src={assets.locationIcon}
                 alt=""
                 className="h-5 w-5 text-[#49B9FF]"
               />
@@ -72,9 +176,12 @@ const Hero = () => {
             <input
               list="destinations"
               id="destinationInput"
+              name="destination"
               type="text"
+              value={searchForm.destination}
+              onChange={handleInputChange}
               className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
-              placeholder="Type here"
+              placeholder="Where are you going?"
               required
             />
             <datalist id="destinations">
@@ -97,8 +204,13 @@ const Hero = () => {
             </div>
             <input
               id="checkIn"
+              name="checkIn"
               type="date"
+              value={searchForm.checkIn}
+              onChange={handleInputChange}
+              min={today}
               className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
+              required
             />
           </div>
 
@@ -115,28 +227,61 @@ const Hero = () => {
             </div>
             <input
               id="checkOut"
+              name="checkOut"
               type="date"
+              value={searchForm.checkOut}
+              onChange={handleInputChange}
+              min={searchForm.checkIn || tomorrow}
               className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
+              required
             />
           </div>
 
           <div className="flex flex-col min-w-[100px]">
-            <label htmlFor="guests" className="font-semibold text-base mb-1">
-              Guests
-            </label>
+            <div className="flex items-center gap-2 mb-1">
+              <img
+                src={assets.guestsIcon}
+                alt=""
+                className="h-5 w-5 text-[#49B9FF]"
+              />
+              <label htmlFor="guests" className="font-semibold text-base">
+                Guests
+              </label>
+            </div>
             <input
               min={1}
-              max={4}
+              max={10}
               id="guests"
+              name="guests"
               type="number"
+              value={searchForm.guests}
+              onChange={handleInputChange}
               className="rounded-2xl border border-gray-200 px-4 py-2 text-sm outline-none max-w-16 focus:border-[#49B9FF] focus:ring-2 focus:ring-[#49B9FF]/30 transition-all placeholder-gray-400 bg-white"
-              placeholder="0"
+              placeholder="1"
+              required
             />
           </div>
 
-          <button className="flex items-center justify-center gap-2 rounded-2xl bg-[#49B9FF] py-3 px-7 text-white font-bold text-lg my-auto cursor-pointer max-md:w-full max-md:py-2 shadow-lg hover:bg-[#2386c8] transition-all">
-            <img src={assets.searchIcon} alt="searchIcon" className="h-6 w-6" />
-            <span>Search</span>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-[#49B9FF] py-3 px-7 text-white font-bold text-lg my-auto cursor-pointer max-md:w-full max-md:py-2 shadow-lg hover:bg-[#2386c8] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Searching...</span>
+              </>
+            ) : (
+              <>
+                <img
+                  src={assets.searchIcon}
+                  alt="searchIcon"
+                  className="h-6 w-6"
+                />
+                <span>Search</span>
+              </>
+            )}
           </button>
         </form>
       </div>

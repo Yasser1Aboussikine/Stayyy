@@ -5,6 +5,7 @@ const OfferSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      
     },
     description: String,
     discountPercentage: {

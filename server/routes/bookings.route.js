@@ -1,38 +1,38 @@
-const router = require("./auth.route");
+const express = require("express");
+const router = express.Router();
+const {
+  getAllBookingsController,
+  getBookingByIdController,
+  createBookingController,
+  updateBookingStatusController,
+  cancelBookingController,
+  deleteBookingController,
+  getUserBookingsController,
+} = require("../controllers/booking.controller");
+const { authenticateToken } = require("../middleware/auth");
 
-const getAllRoomsController = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+// Apply authentication middleware to all booking routes
+router.use(authenticateToken);
 
-    const { search, minPrice, maxPrice, capacity, amenities } = req.query;
+// Get all bookings (admin only)
+router.get("/", getAllBookingsController);
 
-    let query = {};
+// Get user's own bookings
+router.get("/my-bookings", getUserBookingsController);
 
-    // ... build query as before ...
+// Get booking by ID
+router.get("/:id", getBookingByIdController);
 
-    const rooms = await Room.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+// Create new booking
+router.post("/", createBookingController);
 
-    const total = await Room.countDocuments(query);
+// Update booking status (admin only)
+router.patch("/:id/status", updateBookingStatusController);
 
-    // Always respond with JSON, even if rooms is empty
-    res.status(200).json({
-      rooms,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Get all rooms error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+// Cancel booking
+router.patch("/:id/cancel", cancelBookingController);
 
-module.exports = getAllRoomsController
+// Delete booking (admin only)
+router.delete("/:id", deleteBookingController);
+
+module.exports = router;

@@ -11,7 +11,6 @@ const {
 } = require("../controllers/auth.controller");
 const router = express.Router();
 
-
 // for debugging
 
 router.get("/debug/users", async (req, res) => {
@@ -25,7 +24,6 @@ router.get("/debug/users", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 router.post("/signup", validateSignup, registerController);
 router.post("/login", validateLogin, loginController);

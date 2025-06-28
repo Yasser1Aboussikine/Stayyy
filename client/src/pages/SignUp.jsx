@@ -16,6 +16,7 @@ const SignUp = () => {
     role: "client",
   });
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({}); // For field-specific errors
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setErrors({});
 
     // Password validation
     if (formData.password !== formData.confirmPassword) {
@@ -55,7 +57,21 @@ const SignUp = () => {
       if (result.success) {
         navigate("/");
       } else {
-        setError(result.error);
+        // Check if the error contains field-specific validation errors
+        if (result.error && result.error.includes(":")) {
+          // Parse field-specific errors
+          const fieldErrors = {};
+          const errorParts = result.error.split(", ");
+          errorParts.forEach((part) => {
+            const [field, message] = part.split(": ");
+            if (field && message) {
+              fieldErrors[field] = message;
+            }
+          });
+          setErrors(fieldErrors);
+        } else {
+          setError(result.error);
+        }
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
@@ -96,56 +112,90 @@ const SignUp = () => {
           )}
 
           {/* Username */}
-          <div className="mt-6 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
-            <input
-              type="text"
-              name="userName"
-              value={formData.userName}
-              onChange={handleChange}
-              placeholder="Username"
-              className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
-              required
-            />
+          <div className="mt-6 w-full">
+            <div className="border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
+              <input
+                type="text"
+                name="userName"
+                value={formData.userName}
+                onChange={handleChange}
+                placeholder="Username"
+                className={`bg-transparent w-full h-full text-sm outline-none ${
+                  errors.userName ? "text-red-600" : "text-gray-700"
+                }`}
+                required
+              />
+            </div>
+            {errors.userName && (
+              <p className="text-red-500 text-xs mt-1 ml-2">
+                {errors.userName}
+              </p>
+            )}
           </div>
 
           {/* Email */}
-          <div className="mt-4 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
-            <input
-              ref={emailRef}
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email"
-              className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
-              required
-            />
+          <div className="mt-4 w-full">
+            <div className="border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
+              <input
+                ref={emailRef}
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className={`bg-transparent w-full h-full text-sm outline-none ${
+                  errors.email ? "text-red-600" : "text-gray-700"
+                }`}
+                required
+              />
+            </div>
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1 ml-2">{errors.email}</p>
+            )}
           </div>
 
           {/* Password */}
-          <div className="mt-4 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
-              required
-            />
+          <div className="mt-4 w-full">
+            <div className="border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                className={`bg-transparent w-full h-full text-sm outline-none ${
+                  errors.password ? "text-red-600" : "text-gray-700"
+                }`}
+                required
+              />
+            </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1 ml-2">
+                {errors.password}
+              </p>
+            )}
           </div>
 
           {/* Confirm Password */}
-          <div className="mt-4 w-full border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm Password"
-              className="bg-transparent w-full h-full text-sm outline-none text-gray-700"
-              required
-            />
+          <div className="mt-4 w-full">
+            <div className="border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6">
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm Password"
+                className={`bg-transparent w-full h-full text-sm outline-none ${
+                  errors.confirmPassword ? "text-red-600" : "text-gray-700"
+                }`}
+                required
+              />
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1 ml-2">
+                {errors.confirmPassword}
+              </p>
+            )}
           </div>
 
           {/* Role */}
@@ -155,12 +205,17 @@ const SignUp = () => {
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full border border-gray-300/60 text-sm rounded-full h-12 px-4 bg-transparent text-gray-700"
+              className={`w-full border border-gray-300/60 text-sm rounded-full h-12 px-4 bg-transparent ${
+                errors.role ? "text-red-600" : "text-gray-700"
+              }`}
             >
               <option value="client">User</option>
               <option value="hotelOwner">Hotel Owner</option>
               <option value="admin">Admin</option>
             </select>
+            {errors.role && (
+              <p className="text-red-500 text-xs mt-1 ml-2">{errors.role}</p>
+            )}
           </div>
 
           {/* Submit */}

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import {useRef, useEffect} from 'react';
+import { roomsAPI } from "../services/api";
 import { assets, facilityIcons } from "../assets/assets";
 import StarRating from "../components/StarRating";
 
@@ -68,22 +71,117 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
   );
 };
 
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const pages = [];
+  const maxVisiblePages = 5;
+
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  if (endPage - startPage + 1 < maxVisiblePages) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-8">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Previous
+      </button>
+
+      {startPage > 1 && (
+        <>
+          <button
+            onClick={() => onPageChange(1)}
+            className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+          >
+            1
+          </button>
+          {startPage > 2 && <span className="px-2">...</span>}
+        </>
+      )}
+
+      {pages.map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page)}
+          className={`px-3 py-2 rounded-lg border ${
+            currentPage === page
+              ? "bg-[#49B9FF] text-white border-[#49B9FF]"
+              : "border-gray-300 hover:bg-gray-50"
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+
+      {endPage < totalPages && (
+        <>
+          {endPage < totalPages - 1 && <span className="px-2">...</span>}
+          <button
+            onClick={() => onPageChange(totalPages)}
+            className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+          >
+            {totalPages}
+          </button>
+        </>
+      )}
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Next
+      </button>
+    </div>
+  );
+};
+
 const AllRooms = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [openFilters, setOpenFilters] = useState(false);
+  const formRef = useRef();
+  // Read URL search parameters
+  const searchParams = new URLSearchParams(location.search);
+  const urlCity = searchParams.get("city");
+  const urlCheckInDate = searchParams.get("checkInDate");
+  const urlCheckOutDate = searchParams.get("checkOutDate");
+  const urlGuests = searchParams.get("guests");
 
   // Filter state
   const [selectedRoomTypes, setSelectedRoomTypes] = useState([]);
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedSortOption, setSelectedSortOption] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(urlCity || "");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRooms, setTotalRooms] = useState(0);
 
   // Data state
-  const [roomsData, setRoomsData] = useState(null);
+  const [roomsData, setRoomsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const roomTypes = ["Single Bed", "Double Bed", "Luxury Room", "Family Suite"];
+  // Search summary state
+  const [searchSummary, setSearchSummary] = useState({
+    city: urlCity,
+    checkInDate: urlCheckInDate,
+    checkOutDate: urlCheckOutDate,
+    guests: urlGuests,
+  });
+
+  const roomTypes = ["Single Bed", "Double Bed", "Suite", "Deluxe", "Family"];
   const priceRanges = [
     "0 to 500",
     "500 to 1000",
@@ -93,6 +191,7 @@ const AllRooms = () => {
   const sortOptions = [
     "Price Low to High",
     "Price High to Low",
+    "Rating High to Low",
     "Newest First",
   ];
 
@@ -101,14 +200,22 @@ const AllRooms = () => {
     setSelectedRoomTypes((prev) =>
       checked ? [...prev, label] : prev.filter((item) => item !== label)
     );
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handlePriceRangeChange = (label) => {
     setSelectedPriceRange(label);
+    setCurrentPage(1);
   };
 
   const handleSortOptionChange = (label) => {
     setSelectedSortOption(label);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
   };
 
   // Handler for clearing all filters
@@ -117,80 +224,93 @@ const AllRooms = () => {
     setSelectedPriceRange("");
     setSelectedSortOption("");
     setSearchTerm("");
+    setCurrentPage(1);
+    
+    // Clear URL parameters and navigate to base hotels page
+    navigate("/hotels");
   };
 
-  // Fetch rooms directly
+  // Fetch rooms using the API service
   useEffect(() => {
     const fetchRooms = async () => {
       setLoading(true);
       setError(null);
 
-      // Build query params
-      const params = new URLSearchParams();
-      params.append("limit", 10);
-
-      if (searchTerm) params.append("search", searchTerm);
-
-      if (selectedPriceRange) {
-        const [min, max] = selectedPriceRange.split(" to ");
-        params.append("minPrice", min);
-        params.append("maxPrice", max);
-      }
-
-      if (selectedRoomTypes.length > 0) {
-        params.append("amenities", selectedRoomTypes.join(","));
-      }
-
-      if (selectedSortOption) {
-        switch (selectedSortOption) {
-          case "Price Low to High":
-            params.append("sort", "price");
-            params.append("order", "asc");
-            break;
-          case "Price High to Low":
-            params.append("sort", "price");
-            params.append("order", "desc");
-            break;
-          case "Newest First":
-            params.append("sort", "createdAt");
-            params.append("order", "desc");
-            break;
-          default:
-            break;
-        }
-      }
-
       try {
-        const res = await fetch(`/api/hotels?${params.toString()}`);
-        const contentType = res.headers.get("content-type");
-        const text = await res.text();
+        // Build query params
+        const params = {
+          page: currentPage,
+          limit: 10,
+        };
 
-        if (!text) {
-          throw new Error("Empty response from server");
+        if (searchTerm) params.search = searchTerm;
+
+        // Add availability check parameters if they exist
+        if (urlCity) params.city = urlCity;
+        if (urlCheckInDate) params.checkInDate = urlCheckInDate;
+        if (urlCheckOutDate) params.checkOutDate = urlCheckOutDate;
+        if (urlGuests) params.guests = urlGuests;
+
+        if (selectedPriceRange) {
+          const [min, max] = selectedPriceRange.split(" to ");
+          params.minPrice = min;
+          params.maxPrice = max;
         }
 
-        let data;
-        if (contentType && contentType.includes("application/json")) {
-          data = JSON.parse(text);
-        } else {
-          throw new Error(text || "Unknown error");
+        if (selectedRoomTypes.length > 0) {
+          params.roomType = selectedRoomTypes.join(",");
         }
-        if (!res.ok) {
-          throw new Error(data.message || "Failed to fetch rooms");
+
+        if (selectedSortOption) {
+          switch (selectedSortOption) {
+            case "Price Low to High":
+              params.sort = "pricePerNight";
+              params.order = "asc";
+              break;
+            case "Price High to Low":
+              params.sort = "pricePerNight";
+              params.order = "desc";
+              break;
+            case "Rating High to Low":
+              params.sort = "rating";
+              params.order = "desc";
+              break;
+            case "Newest First":
+              params.sort = "createdAt";
+              params.order = "desc";
+              break;
+            default:
+              break;
+          }
         }
-        setRoomsData(data);
+
+        const data = await roomsAPI.getAllRooms(params);
+        setRoomsData(data.rooms || []);
+        setTotalPages(data.pagination?.pages || 1);
+        setTotalRooms(data.pagination?.total || 0);
       } catch (err) {
         setError(err.message || "Failed to fetch rooms");
+        console.error("Error fetching rooms:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchRooms();
-  }, [searchTerm, selectedPriceRange, selectedRoomTypes, selectedSortOption]);
+  }, [
+    currentPage,
+    searchTerm,
+    selectedPriceRange,
+    selectedRoomTypes,
+    selectedSortOption,
+    urlCity,
+    urlCheckInDate,
+    urlCheckOutDate,
+    urlGuests,
+  ]);
 
   // Loading state
-  if (loading) {
+  if (loading && roomsData.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#eaf6fd] via-white to-[#f4faff] pt-24 pb-20">
         <div className="w-full max-w-[1600px] mx-auto px-4 md:px-16 lg:px-24 xl:px-32">
@@ -203,7 +323,7 @@ const AllRooms = () => {
   }
 
   // Error state
-  if (error) {
+  if (error && roomsData.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#eaf6fd] via-white to-[#f4faff] pt-24 pb-20">
         <div className="w-full max-w-[1600px] mx-auto px-4 md:px-16 lg:px-24 xl:px-32">
@@ -224,8 +344,6 @@ const AllRooms = () => {
     );
   }
 
-  const rooms = roomsData?.rooms || [];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#eaf6fd] via-white to-[#f4faff] pt-24 pb-20">
       <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-8 px-4 md:px-16 lg:px-24 xl:px-32">
@@ -239,6 +357,64 @@ const AllRooms = () => {
               Take advantage of our limited-time offers and special packages to
               enhance your stay and create unforgettable memories.
             </p>
+            {totalRooms > 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                Showing {roomsData.length} of {totalRooms} rooms
+              </p>
+            )}
+
+            {/* Search Summary */}
+            {(urlCity || urlCheckInDate || urlCheckOutDate || urlGuests) && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="font-semibold text-blue-800 mb-2">
+                  Search Summary:
+                </h3>
+                <div className="flex flex-wrap gap-4 text-sm text-blue-700">
+                  {urlCity && (
+                    <span className="flex items-center gap-1">
+                      <img
+                        src={assets.locationIcon}
+                        alt="location"
+                        className="w-4 h-4"
+                      />
+                      {urlCity}
+                    </span>
+                  )}
+                  {urlCheckInDate && (
+                    <span className="flex items-center gap-1">
+                      <img
+                        src={assets.calenderIcon}
+                        alt="check-in"
+                        className="w-4 h-4"
+                      />
+                      Check-in: {new Date(urlCheckInDate).toLocaleDateString()}
+                    </span>
+                  )}
+                  {urlCheckOutDate && (
+                    <span className="flex items-center gap-1">
+                      <img
+                        src={assets.calenderIcon}
+                        alt="check-out"
+                        className="w-4 h-4"
+                      />
+                      Check-out:{" "}
+                      {new Date(urlCheckOutDate).toLocaleDateString()}
+                    </span>
+                  )}
+                  {urlGuests && (
+                    <span className="flex items-center gap-1">
+                      <img
+                        src={assets.guestsIcon}
+                        alt="guests"
+                        className="w-4 h-4"
+                      />
+                      {urlGuests}{" "}
+                      {parseInt(urlGuests) === 1 ? "Guest" : "Guests"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Search Bar */}
@@ -246,7 +422,7 @@ const AllRooms = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search rooms by name or description..."
+                placeholder="Search rooms by name, type, or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#49B9FF] focus:border-transparent"
@@ -267,13 +443,13 @@ const AllRooms = () => {
           )}
 
           <div className="space-y-8">
-            {rooms.length === 0 ? (
+            {roomsData.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">No rooms found</p>
                 <p className="text-gray-400">Try adjusting your filters</p>
               </div>
             ) : (
-              rooms.map((room) => (
+              roomsData.map((room) => (
                 <div
                   key={room._id}
                   className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300"
@@ -282,7 +458,7 @@ const AllRooms = () => {
                     <img
                       onClick={() => {
                         navigate(`/rooms/${room._id}`);
-                        scrollTo(0, 0);
+                        window.scrollTo(0, 0);
                       }}
                       src={room.images?.[0] || assets.roomImg1}
                       alt="hotel-img"
@@ -297,11 +473,11 @@ const AllRooms = () => {
                       <p
                         onClick={() => {
                           navigate(`/rooms/${room._id}`);
-                          scrollTo(0, 0);
+                          window.scrollTo(0, 0);
                         }}
                         className="text-gray-800 text-2xl md:text-3xl font-playfair font-bold cursor-pointer hover:text-[#49B9FF] transition-colors"
                       >
-                        {room.name}
+                        {room.hotel?.name || room.roomType}
                       </p>
                       <div className="flex items-center gap-2">
                         <StarRating rating={room.rating || 4.5} />
@@ -319,9 +495,10 @@ const AllRooms = () => {
                         </span>
                       </div>
 
-                      {/* Room Description */}
-                      <p className="text-gray-600 text-sm line-clamp-2">
-                        {room.description}
+                      {/* Room Type */}
+                      <p className="text-gray-600 text-sm">
+                        <span className="font-semibold">Room Type:</span>{" "}
+                        {room.roomType}
                       </p>
 
                       {/* Room Amenities */}
@@ -351,7 +528,7 @@ const AllRooms = () => {
                       {/* Room Price Per Night */}
                       <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                         <p className="text-2xl font-bold text-gray-800">
-                          ${room.price}
+                          ${room.pricePerNight}
                           <span className="text-sm font-normal text-gray-500">
                             {" "}
                             /night
@@ -360,7 +537,7 @@ const AllRooms = () => {
                         <button
                           onClick={() => {
                             navigate(`/rooms/${room._id}`);
-                            scrollTo(0, 0);
+                            window.scrollTo(0, 0);
                           }}
                           className="px-6 py-2 bg-[#49B9FF] text-white rounded-lg hover:bg-[#3a9be8] transition-colors"
                         >
@@ -373,6 +550,15 @@ const AllRooms = () => {
               ))
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
         </div>
 
         {/* Filters Sidebar */}
