@@ -1,23 +1,20 @@
 const Room = require("../models/Room");
 const Booking = require("../models/Booking");
 
-// Helper function to handle errors
 const handleErrors = (error) => {
   let errors = {};
 
-  // Validation errors
+
   if (error.name === "ValidationError") {
     Object.values(error.errors).forEach(({ properties }) => {
       errors[properties.path] = properties.message;
     });
   }
 
-  // Cast error (invalid ObjectId)
   if (error.name === "CastError") {
     errors.id = "Invalid ID format";
   }
 
-  // Duplicate key error
   if (error.code === 11000) {
     errors.name = "Room with this name already exists";
   }
@@ -25,7 +22,7 @@ const handleErrors = (error) => {
   return errors;
 };
 
-// Get all rooms controller
+
 const getAllRoomsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -37,7 +34,7 @@ const getAllRoomsController = async (req, res) => {
 
     let query = {};
 
-    // Search by room type or hotel information
+  
     if (search) {
       query.$or = [
         { roomType: { $regex: search, $options: "i" } },
@@ -46,19 +43,18 @@ const getAllRoomsController = async (req, res) => {
       ];
     }
 
-    // Price filter
+
     if (minPrice || maxPrice) {
       query.pricePerNight = {};
       if (minPrice) query.pricePerNight.$gte = parseFloat(minPrice);
       if (maxPrice) query.pricePerNight.$lte = parseFloat(maxPrice);
     }
 
-    // Room type filter
+    
     if (roomType) {
       query.roomType = roomType;
     }
 
-    // Amenities filter
     if (amenities) {
       const amenitiesArray = amenities.split(",").map((a) => a.trim());
       query.amenities = { $all: amenitiesArray };
@@ -94,7 +90,6 @@ const getAllRoomsController = async (req, res) => {
   }
 };
 
-// Get room by ID controller
 const getRoomByIdController = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -111,12 +106,11 @@ const getRoomByIdController = async (req, res) => {
   }
 };
 
-// Create room controller
+
 const createRoomController = async (req, res) => {
   try {
     const { hotel, roomType, pricePerNight, amenities, images } = req.body;
 
-    // Validate required fields
     if (!hotel || !roomType || !pricePerNight || !images) {
       return res.status(400).json({
         error:
@@ -124,12 +118,10 @@ const createRoomController = async (req, res) => {
       });
     }
 
-    // Validate price
     if (pricePerNight <= 0) {
       return res.status(400).json({ error: "Price must be greater than 0" });
     }
 
-    // Validate room type
     const validRoomTypes = [
       "Single Bed",
       "Double Bed",
@@ -160,7 +152,7 @@ const createRoomController = async (req, res) => {
   }
 };
 
-// Update room controller
+
 const updateRoomController = async (req, res) => {
   try {
     const { hotel, roomType, pricePerNight, amenities, images } = req.body;
@@ -170,12 +162,10 @@ const updateRoomController = async (req, res) => {
       return res.status(404).json({ error: "Room not found" });
     }
 
-    // Validate price if provided
     if (pricePerNight !== undefined && pricePerNight <= 0) {
       return res.status(400).json({ error: "Price must be greater than 0" });
     }
 
-    // Validate room type if provided
     if (roomType !== undefined) {
       const validRoomTypes = [
         "Single Bed",
@@ -189,7 +179,6 @@ const updateRoomController = async (req, res) => {
       }
     }
 
-    // Update fields
     if (hotel) room.hotel = hotel;
     if (roomType) room.roomType = roomType;
     if (pricePerNight !== undefined) room.pricePerNight = pricePerNight;
@@ -209,7 +198,7 @@ const updateRoomController = async (req, res) => {
   }
 };
 
-// Delete room controller
+
 const deleteRoomController = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -217,7 +206,6 @@ const deleteRoomController = async (req, res) => {
       return res.status(404).json({ error: "Room not found" });
     }
 
-    // Check if room has any active bookings
     const activeBookings = await Booking.find({
       room: req.params.id,
       status: { $in: ["pending", "confirmed"] },
@@ -239,7 +227,6 @@ const deleteRoomController = async (req, res) => {
   }
 };
 
-// Search available rooms controller
 const searchAvailableRoomsController = async (req, res) => {
   try {
     const { checkInDate, checkOutDate, roomType } = req.query;
@@ -258,16 +245,12 @@ const searchAvailableRoomsController = async (req, res) => {
         error: "Check-out date must be after check-in date",
       });
     }
-
-    // Get all rooms that match the room type requirement
     let query = {};
     if (roomType) {
       query.roomType = roomType;
     }
 
     const rooms = await Room.find(query);
-
-    // Filter out rooms that have conflicting bookings
     const availableRooms = [];
 
     for (const room of rooms) {
@@ -302,7 +285,6 @@ const searchAvailableRoomsController = async (req, res) => {
   }
 };
 
-// Get room statistics controller
 const getRoomStatsController = async (req, res) => {
   try {
     const totalRooms = await Room.countDocuments();
