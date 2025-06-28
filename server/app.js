@@ -4,14 +4,9 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const apiRouter = require("./routes/api");
-
-// Load environment variables
 dotenv.config();
-
-
 const app = express();
 
-// Middleware
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
