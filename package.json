@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "husky": "^8.0.3",
+    "lint-staged": "^16.1.2",
+    "strip-comments": "^2.0.1"
+  },
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "strip-comments --replace",
+      "git add"
+    ]
+  }
+}

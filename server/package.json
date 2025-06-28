@@ -1,0 +1,42 @@
+{
+  "name": "hotelbooking",
+  "version": "1.0.0",
+  "description": "Simple Hotel Booking web app full-stack",
+  "homepage": "https://github.com/Yasser1Aboussikine/HotelBooking#readme",
+  "bugs": {
+    "url": "https://github.com/Yasser1Aboussikine/HotelBooking/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yasser1Aboussikine/HotelBooking.git"
+  },
+  "license": "ISC",
+  "author": "Yasser Aboussikine",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js",
+    "dev": "nodemon app.js",
+    "seed": "node seeders/index.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.7.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.2.1",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.0",
+    "multer": "^2.0.1",
+    "nodemon": "^3.1.10",
+    "svix": "^1.67.0",
+    "validator": "^13.15.15"
+  }
+}
