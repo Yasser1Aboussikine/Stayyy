@@ -1,65 +1,49 @@
-🏨 Stayyy – Hotel Booking Platform
-Stayyy is a modern, full-stack hotel booking platform designed to connect travelers with hotel rooms based on location, budget, amenities, and availability. It offers secure authentication, advanced filtering, and a seamless booking experience for users.
+# 🏨 Stayyy – Hotel Booking Platform
 
-🚀 Features
-👤 User Authentication
-User registration and login using JWT and bcrypt
+**Stayyy** is a modern full-stack hotel booking platform that connects travelers with available rooms based on their preferences. It offers a secure, scalable, and user-friendly experience, with features like user authentication, filtered room listings, and dynamic booking management.
 
-Token-based session management with route protection
+---
 
-Input validation and error handling
+## 🚀 Features
 
-Logout and session verification support
+### 👤 User Authentication
+- Register and login with secure **JWT-based authentication**
+- Passwords hashed using **bcrypt**
+- Input validation and error handling
+- Logout and session verification endpoints
 
-🏨 Hotels & Rooms
-Create, update, and fetch hotel and room listings
+### 🏨 Hotels & Rooms
+- Create and manage hotel and room listings
+- Filter by:
+  - Price range
+  - Capacity
+  - Amenities
+  - Keywords (e.g., location or hotel name)
+- Pagination and sorting by creation date
 
-Filter rooms by:
+### 📅 Bookings
+- Book available rooms with date-based checks
+- Prevent double bookings
+- User-specific booking history and data retrieval
 
-Price range
+### 🛡️ Security & Middleware
+- HTTP header protection via **Helmet**
+- **CORS** enabled with custom origin
+- **Rate limiting** to prevent abuse
+- Centralized error handling and 404 fallback
+- Request logging middleware
 
-Capacity
+---
 
-Amenities
+## 🧱 Tech Stack
 
-Search keyword (name/location)
+| Layer        | Technology                        |
+|--------------|-----------------------------------|
+| **Frontend** | React.js *(planned/in development)* |
+| **Backend**  | Node.js, Express.js               |
+| **Auth**     | JWT, bcrypt                       |
+| **Database** | MongoDB + Mongoose                |
+| **Security** | Helmet, Rate Limiting, CORS       |
+| **API**      | RESTful API Architecture          |
 
-Pagination support for room listings
 
-Sort by latest listings
-
-📅 Bookings
-Users can book available rooms
-
-Prevents double-bookings
-
-Fetch bookings for each user
-
-Booking details: dates, hotel, room, user info
-
-🛡️ Security & Performance
-Secure headers via helmet
-
-CORS support with configurable origin
-
-Rate limiting to prevent abuse
-
-Input sanitization and validation
-
-Centralized error handling and 404 fallback
-
-📦 API Structure
-Modular routing (/auth, /hotels, /bookings)
-
-Clean controller-based architecture
-
-Express middleware for auth, validation, and logging
-
-🧱 Tech Stack
-Layer	Technology
-Frontend	React.js (planned or in progress)
-Backend	Node.js, Express.js
-Auth	bcrypt, JWT
-Database	MongoDB with Mongoose
-Security	Helmet, Rate Limiting, CORS
-API	RESTful endpoints

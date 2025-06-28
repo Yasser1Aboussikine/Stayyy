@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useNavigate, useLocation } from "react-router-dom";
-import {useRef, useEffect} from 'react';
 import { roomsAPI } from "../services/api";
 import { assets, facilityIcons } from "../assets/assets";
 import StarRating from "../components/StarRating";
@@ -162,6 +160,7 @@ const AllRooms = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedSortOption, setSelectedSortOption] = useState("");
   const [searchTerm, setSearchTerm] = useState(urlCity || "");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(urlCity || "");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -172,14 +171,6 @@ const AllRooms = () => {
   const [roomsData, setRoomsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Search summary state
-  const [searchSummary, setSearchSummary] = useState({
-    city: urlCity,
-    checkInDate: urlCheckInDate,
-    checkOutDate: urlCheckOutDate,
-    guests: urlGuests,
-  });
 
   const roomTypes = ["Single Bed", "Double Bed", "Suite", "Deluxe", "Family"];
   const priceRanges = [
@@ -195,12 +186,25 @@ const AllRooms = () => {
     "Newest First",
   ];
 
+  useEffect((e) => {
+    formRef.current.focus();
+  }, []);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Handlers
   const handleRoomTypeChange = (checked, label) => {
     setSelectedRoomTypes((prev) =>
       checked ? [...prev, label] : prev.filter((item) => item !== label)
     );
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   const handlePriceRangeChange = (label) => {
@@ -218,34 +222,29 @@ const AllRooms = () => {
     window.scrollTo(0, 0);
   };
 
-  // Handler for clearing all filters
   const handleClearAll = () => {
     setSelectedRoomTypes([]);
     setSelectedPriceRange("");
     setSelectedSortOption("");
     setSearchTerm("");
     setCurrentPage(1);
-    
-    // Clear URL parameters and navigate to base hotels page
+
     navigate("/hotels");
   };
 
-  // Fetch rooms using the API service
   useEffect(() => {
     const fetchRooms = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Build query params
         const params = {
           page: currentPage,
           limit: 10,
         };
 
-        if (searchTerm) params.search = searchTerm;
+        if (debouncedSearchTerm) params.search = debouncedSearchTerm;
 
-        // Add availability check parameters if they exist
         if (urlCity) params.city = urlCity;
         if (urlCheckInDate) params.checkInDate = urlCheckInDate;
         if (urlCheckOutDate) params.checkOutDate = urlCheckOutDate;
@@ -299,7 +298,7 @@ const AllRooms = () => {
     fetchRooms();
   }, [
     currentPage,
-    searchTerm,
+    debouncedSearchTerm,
     selectedPriceRange,
     selectedRoomTypes,
     selectedSortOption,
@@ -309,7 +308,6 @@ const AllRooms = () => {
     urlGuests,
   ]);
 
-  // Loading state
   if (loading && roomsData.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#eaf6fd] via-white to-[#f4faff] pt-24 pb-20">
@@ -322,7 +320,6 @@ const AllRooms = () => {
     );
   }
 
-  // Error state
   if (error && roomsData.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#eaf6fd] via-white to-[#f4faff] pt-24 pb-20">
@@ -363,79 +360,168 @@ const AllRooms = () => {
               </p>
             )}
 
-            {/* Search Summary */}
             {(urlCity || urlCheckInDate || urlCheckOutDate || urlGuests) && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="font-semibold text-blue-800 mb-2">
-                  Search Summary:
-                </h3>
-                <div className="flex flex-wrap gap-4 text-sm text-blue-700">
-                  {urlCity && (
-                    <span className="flex items-center gap-1">
-                      <img
-                        src={assets.locationIcon}
-                        alt="location"
-                        className="w-4 h-4"
-                      />
-                      {urlCity}
-                    </span>
-                  )}
-                  {urlCheckInDate && (
-                    <span className="flex items-center gap-1">
-                      <img
-                        src={assets.calenderIcon}
-                        alt="check-in"
-                        className="w-4 h-4"
-                      />
-                      Check-in: {new Date(urlCheckInDate).toLocaleDateString()}
-                    </span>
-                  )}
-                  {urlCheckOutDate && (
-                    <span className="flex items-center gap-1">
-                      <img
-                        src={assets.calenderIcon}
-                        alt="check-out"
-                        className="w-4 h-4"
-                      />
-                      Check-out:{" "}
-                      {new Date(urlCheckOutDate).toLocaleDateString()}
-                    </span>
-                  )}
-                  {urlGuests && (
-                    <span className="flex items-center gap-1">
-                      <img
-                        src={assets.guestsIcon}
-                        alt="guests"
-                        className="w-4 h-4"
-                      />
-                      {urlGuests}{" "}
-                      {parseInt(urlGuests) === 1 ? "Guest" : "Guests"}
-                    </span>
-                  )}
+              <div className="mt-6 mb-8 w-full flex justify-center items-center">
+                <div className="bg-gradient-to-r from-[#49B9FF]/10 to-[#2386c8]/10 border-2 border-[#49B9FF]/20 rounded-2xl p-6 shadow-lg backdrop-blur-sm max-w-2xl w-full mx-auto">
+                  <div className="text-center mb-4">
+                    <h3 className="font-bold text-[#49B9FF] text-lg mb-1">
+                      Search Summary
+                    </h3>
+                    <div className="w-16 h-0.5 bg-gradient-to-r from-[#49B9FF] to-[#2386c8] mx-auto rounded-full"></div>
+                  </div>
+                  <div className="flex flex-wrap justify-center items-center gap-4 text-sm">
+                    {urlCity && (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-[#49B9FF]/30 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <img
+                          src={assets.locationIcon}
+                          alt="location"
+                          className="w-4 h-4 text-[#49B9FF]"
+                        />
+                        <span className="font-medium text-gray-700">
+                          {urlCity}
+                        </span>
+                      </div>
+                    )}
+                    {urlCheckInDate && (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-[#49B9FF]/30 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <img
+                          src={assets.calenderIcon}
+                          alt="check-in"
+                          className="w-4 h-4 text-[#49B9FF]"
+                        />
+                        <span className="font-medium text-gray-700">
+                          Check-in:{" "}
+                          {new Date(urlCheckInDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    {urlCheckOutDate && (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-[#49B9FF]/30 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <img
+                          src={assets.calenderIcon}
+                          alt="check-out"
+                          className="w-4 h-4 text-[#49B9FF]"
+                        />
+                        <span className="font-medium text-gray-700">
+                          Check-out:{" "}
+                          {new Date(urlCheckOutDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    {urlGuests && (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-[#49B9FF]/30 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <img
+                          src={assets.guestsIcon}
+                          alt="guests"
+                          className="w-4 h-4 text-[#49B9FF]"
+                        />
+                        <span className="font-medium text-gray-700">
+                          {urlGuests}{" "}
+                          {parseInt(urlGuests) === 1 ? "Guest" : "Guests"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Search Bar */}
           <div className="mb-6">
-            <div className="relative">
+            <div className="relative group">
               <input
                 type="text"
                 placeholder="Search rooms by name, type, or location..."
                 value={searchTerm}
+                ref={formRef}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#49B9FF] focus:border-transparent"
+                className="w-full px-4 py-4 pl-14 pr-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#49B9FF]/20 focus:border-[#49B9FF] transition-all duration-300 bg-white shadow-sm hover:shadow-md hover:border-gray-300 placeholder-gray-400 text-gray-700 font-medium"
               />
-              <img
-                src={assets.searchIcon}
-                alt="search"
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-              />
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                <svg
+                  className="w-5 h-5 text-gray-400 group-hover:text-[#49B9FF] transition-colors duration-300"
+                  style={{
+                    width: "1em",
+                    height: "1em",
+                    verticalAlign: "middle",
+                    fill: "currentColor",
+                    overflow: "hidden",
+                  }}
+                  viewBox="0 0 1024 1024"
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M821.6576 762.0608l-114.4832-110.1824c42.3936-49.3568 67.7888-111.616 67.7888-180.8384 0-155.4432-131.4816-282.4192-292.4544-282.4192-162.6112 1.4336-293.888 126.976-293.888 282.4192s131.4816 282.4192 292.4544 282.4192c55.9104 0 110.7968-15.5648 158.3104-45.2608l118.784 114.4832c16.9984 16.9984 45.2608 16.9984 63.6928 0 8.8064-7.5776 13.7216-18.6368 13.7216-30.3104-0.2048-11.6736-5.12-22.7328-13.9264-30.3104m-340.5824-87.6544c-115.9168 0-210.5344-90.3168-210.5344-203.3664 0-111.616 94.6176-201.9328 210.5344-201.9328 115.9168 0 210.5344 90.3168 210.5344 203.3664 0 111.616-94.6176 201.9328-210.5344 201.9328" />
+                </svg>
+              </div>
+              {searchTerm !== debouncedSearchTerm && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#49B9FF] border-t-transparent"></div>
+                </div>
+              )}
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  title="Clear search"
+                >
+                  <svg
+                    className="w-4 h-4 text-gray-400 hover:text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
+            {/* Search stats */}
+            {debouncedSearchTerm && (
+              <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  Searching for "{debouncedSearchTerm}"
+                </span>
+                {totalRooms > 0 && (
+                  <span className="flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                    {totalRooms} rooms found
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Loading indicator for data updates */}
           {loading && (
             <div className="flex justify-center mb-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#49B9FF]"></div>
