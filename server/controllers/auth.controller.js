@@ -6,16 +6,13 @@ require("dotenv").config();
 
 // Constants
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-const MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
-
-// Helper function to create a JWT token
+const MAX_AGE = 7 * 24 * 60 * 60; //7 days
 const createToken = (userId, email, role) => {
   return jwt.sign({ userId, email, role }, JWT_SECRET, {
     expiresIn: MAX_AGE,
   });
 };
 
-// Helper function to handle errors
 const handleErrors = (error) => {
   let errors = {};
 
@@ -35,7 +32,6 @@ const handleErrors = (error) => {
   return errors;
 };
 
-// Login controller
 const loginController = async (req, res) => {
   console.log("Login attempt with data:", req.body);
   const { identifier, password } = req.body;
@@ -49,7 +45,6 @@ const loginController = async (req, res) => {
       return res.status(400).json({ error: "Email or username not found" });
     }
 
-    // Compare the provided password with the hashed password in the database
     const auth = await bcrypt.compare(password, userInfo.password);
     if (!auth) {
       return res.status(400).json({ error: "Incorrect password" });
@@ -58,15 +53,15 @@ const loginController = async (req, res) => {
     // Generate a JWT token
     const token = createToken(userInfo._id, userInfo.email, userInfo.role);
 
-    // Set the JWT token in an HTTP-only cookie
+
     res.cookie("jwt", token, {
-      maxAge: MAX_AGE * 1000, // Cookie expires in 7 days (in milliseconds)
-      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
-      secure: process.env.NODE_ENV === "production", // Send cookie only over HTTPS in production
+      maxAge: MAX_AGE * 1000,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", 
       sameSite: "strict", // Prevents CSRF attacks
     });
 
-    // Send a success response with the user data and token
+   
     res.status(200).json({
       user: {
         _id: userInfo._id,
@@ -84,7 +79,6 @@ const loginController = async (req, res) => {
   }
 };
 
-// Register controller
 const registerController = async (req, res) => {
   try {
     console.log("Registration attempt with data:", {
@@ -110,7 +104,6 @@ const registerController = async (req, res) => {
         .json({ error: "Username, email, and password are required" });
     }
 
-    // Create a new user in the database
     const userRole = role || "client";
     console.log("Attempting to create user with role:", userRole);
 
@@ -127,10 +120,8 @@ const registerController = async (req, res) => {
       role: userInfo.role,
     });
 
-    // Generate a JWT token
     const token = createToken(userInfo._id, userInfo.email, userInfo.role);
 
-    // Set the JWT token in an HTTP-only cookie
     res.cookie("jwt", token, {
       maxAge: MAX_AGE * 1000,
       httpOnly: true,
@@ -138,7 +129,7 @@ const registerController = async (req, res) => {
       sameSite: "strict",
     });
 
-    // Send a success response with the user data and token
+   
     res.status(201).json({
       user: {
         _id: userInfo._id,
@@ -147,7 +138,7 @@ const registerController = async (req, res) => {
         role: userInfo.role,
         createdAt: userInfo.createdAt,
       },
-      token: token, // Also send token in response body for frontend storage
+      token: token, 
       message: "User registered successfully",
     });
   } catch (error) {
@@ -158,15 +149,14 @@ const registerController = async (req, res) => {
       errors: error.errors,
     });
 
-    // Handle errors and send a response with the error details
     const errors = handleErrors(error);
     res.status(400).json({ errors });
   }
 };
 
-// Logout controller
+
 const logoutController = (req, res) => {
-  // Clear the JWT cookie by setting it to an empty value and expiring it immediately
+
   res.cookie("jwt", "", {
     maxAge: 1,
     httpOnly: true,
@@ -176,14 +166,13 @@ const logoutController = (req, res) => {
   res.status(200).json({ message: "User logged out successfully" });
 };
 
-// Verify token controller
+
 const verifyTokenController = async (req, res) => {
   try {
-    // Check for token in Authorization header first
+
     const authHeader = req.headers["authorization"];
     let token = authHeader && authHeader.split(" ")[1];
 
-    // If no token in header, check cookies
     if (!token) {
       token = req.cookies.jwt;
     }
@@ -215,7 +204,6 @@ const verifyTokenController = async (req, res) => {
   }
 };
 
-// Get current user controller
 const getCurrentUserController = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
