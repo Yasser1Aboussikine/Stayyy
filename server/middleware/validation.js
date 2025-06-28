@@ -1,6 +1,5 @@
 const { body, param, query, validationResult } = require("express-validator");
 
-// Middleware to check for validation errors
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -16,7 +15,6 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// Validation rules for user registration
 const validateSignup = [
   body("userName")
     .trim()
@@ -48,7 +46,6 @@ const validateSignup = [
   handleValidationErrors,
 ];
 
-// Validation rules for user login
 const validateLogin = [
   body("identifier")
     .notEmpty()
@@ -57,7 +54,6 @@ const validateLogin = [
   handleValidationErrors,
 ];
 
-// Validation rules for booking creation
 const validateBooking = [
   body("roomId").isMongoId().withMessage("Please provide a valid room ID"),
 
@@ -93,7 +89,6 @@ const validateBooking = [
   handleValidationErrors,
 ];
 
-// Validation rules for room creation/update
 const validateRoom = [
   body("name")
     .trim()
@@ -121,14 +116,12 @@ const validateRoom = [
   handleValidationErrors,
 ];
 
-// Validation rules for MongoDB ObjectId parameters
 const validateObjectId = [
   param("id").isMongoId().withMessage("Please provide a valid ID"),
 
   handleValidationErrors,
 ];
 
-// Validation rules for pagination
 const validatePagination = [
   query("page")
     .optional()
