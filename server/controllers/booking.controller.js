@@ -1,5 +1,6 @@
 const Booking = require("../models/Booking");
 const Room = require("../models/Room");
+const User = require("../models/User");
 const handleErrors = (error) => {
   let errors = {};
   if (error.name === "ValidationError") {
@@ -133,8 +134,13 @@ const createBookingController = async (req, res) => {
       totalPrice,
       paymentMethod,
       specialRequests: specialRequests || "",
-      status: "pending",
+      status: "confirmed", //TODO: change it to "pending" after implementing the Admin view 
     });
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: { bookings: booking._id },
+    });
+
     await booking.populate("room", "roomType pricePerNight amenities images");
     await booking.populate("user", "userName email");
 
@@ -200,6 +206,10 @@ const cancelBookingController = async (req, res) => {
     booking.status = "cancelled";
     await booking.save();
 
+    await User.findByIdAndUpdate(booking.user, {
+      $pull: { bookings: booking._id },
+    });
+
     await booking.populate("room", "roomType pricePerNight amenities images");
     await booking.populate("user", "userName email");
 
@@ -220,13 +230,28 @@ const deleteBookingController = async (req, res) => {
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    await Booking.findByIdAndDelete(req.params.id);
+    if ( req.user.role === "client" && booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Access denied" });
+    }
 
-    res.status(200).json({ message: "Booking deleted successfully" });
+    booking.status = "cancelled";
+    await booking.save();
+
+    await User.findByIdAndUpdate(booking.user, {
+      $pull: { bookings: booking._id },
+    });
+
+    await booking.populate("room", "roomType pricePerNight amenities images");
+    await booking.populate("user", "userName email");
+
+    res.status(200).json({
+      booking,
+      message: "Booking cancelled successfully",
+    });
   } catch (error) {
     console.error("Delete booking error:", error);
     const errors = handleErrors(error);
-    res.status(500).json({ error: "Error deleting booking", errors });
+    res.status(500).json({ error: "Error cancelling booking", errors });
   }
 };
 const getUserBookingsController = async (req, res) => {

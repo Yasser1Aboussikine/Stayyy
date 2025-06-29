@@ -1,31 +1,16 @@
 const Room = require("../models/Room");
 const Booking = require("../models/Booking");
-const handleErrors = (error) => {
-  let errors = {};
-  if (error.name === "ValidationError") {
-    Object.values(error.errors).forEach(({ properties }) => {
-      errors[properties.path] = properties.message;
-    });
-  }
-  if (error.name === "CastError") {
-    errors.id = "Invalid ID format";
-  }
-  if (error.code === 11000) {
-    errors.name = "Room with this name already exists";
-  }
 
-  return errors;
-};
 const getAllRoomsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 4;
     const skip = (page - 1) * limit;
 
-    const { search, minPrice, maxPrice, roomType, amenities, sort, order } =
-      req.query;
+    const { search, minPrice, maxPrice, roomType, amenities, sort, order } = req.query;
 
     let query = {};
+
     if (search) {
       query.$or = [
         { roomType: { $regex: search, $options: "i" } },
@@ -45,7 +30,7 @@ const getAllRoomsController = async (req, res) => {
       const amenitiesArray = amenities.split(",").map((a) => a.trim());
       query.amenities = { $all: amenitiesArray };
     }
-    let sortObject = { createdAt: -1 }; // default sort
+    let sortObject = { createdAt: -1 }; 
     if (sort) {
       const sortOrder = order === "asc" ? 1 : -1;
       sortObject = { [sort]: sortOrder };
@@ -73,6 +58,7 @@ const getAllRoomsController = async (req, res) => {
     res.status(500).json({ error: "Internal server error", errors });
   }
 };
+
 const getRoomByIdController = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -294,4 +280,22 @@ module.exports = {
   deleteRoomController,
   searchAvailableRoomsController,
   getRoomStatsController,
+};
+
+
+const handleErrors = (error) => {
+  let errors = {};
+  if (error.name === "ValidationError") {
+    Object.values(error.errors).forEach(({ properties }) => {
+      errors[properties.path] = properties.message;
+    });
+  }
+  if (error.name === "CastError") {
+    errors.id = "Invalid ID format";
+  }
+  if (error.code === 11000) {
+    errors.name = "Room with this name already exists";
+  }
+
+  return errors;
 };

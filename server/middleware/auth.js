@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+//TODo: Do not push the secret key
 const JWT_SECRET = process.env.JWT_SECRET || "myverysecuresecretkey123";
 const authenticateToken = async (req, res, next) => {
   try {
