@@ -4,7 +4,7 @@ const seedRooms = async (hotelOwner) => {
   try {
     await Room.deleteMany({});
     console.log("Cleared existing rooms");
-
+    
     const rooms = [
       {
         name: "Luxury Suite with Ocean View",

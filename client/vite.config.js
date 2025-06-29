@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      "/api": "http://localhost:5000", // Proxy API requests to your backend
+      "/api": "https://3110-196-12-203-30.ngrok-free.app", // Proxy API requests to your backend
     },
   },
 });
