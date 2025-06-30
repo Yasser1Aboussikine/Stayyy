@@ -134,7 +134,7 @@ const createBookingController = async (req, res) => {
       totalPrice,
       paymentMethod,
       specialRequests: specialRequests || "",
-      status: "confirmed", //TODO: change it to "pending" after implementing the Admin view 
+      status: "pending",
     });
 
     await User.findByIdAndUpdate(req.user._id, {
@@ -206,6 +206,7 @@ const cancelBookingController = async (req, res) => {
     booking.status = "cancelled";
     await booking.save();
 
+    // Remove booking from user's bookings array
     await User.findByIdAndUpdate(booking.user, {
       $pull: { bookings: booking._id },
     });
@@ -230,28 +231,23 @@ const deleteBookingController = async (req, res) => {
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    if ( req.user.role === "client" && booking.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "Access denied" });
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Only admins can delete bookings" });
     }
 
-    booking.status = "cancelled";
-    await booking.save();
-
+ 
     await User.findByIdAndUpdate(booking.user, {
       $pull: { bookings: booking._id },
     });
 
-    await booking.populate("room", "roomType pricePerNight amenities images");
-    await booking.populate("user", "userName email");
+    await Booking.findByIdAndDelete(req.params.id);
 
-    res.status(200).json({
-      booking,
-      message: "Booking cancelled successfully",
-    });
+    res.status(200).json({ message: "Booking deleted successfully" });
   } catch (error) {
     console.error("Delete booking error:", error);
     const errors = handleErrors(error);
-    res.status(500).json({ error: "Error cancelling booking", errors });
+    res.status(500).json({ error: "Error deleting booking", errors });
   }
 };
 const getUserBookingsController = async (req, res) => {
