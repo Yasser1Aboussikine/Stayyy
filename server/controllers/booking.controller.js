@@ -231,12 +231,10 @@ const deleteBookingController = async (req, res) => {
       return res.status(404).json({ error: "Booking not found" });
     }
 
-
     if (req.user.role !== "admin") {
       return res.status(403).json({ error: "Only admins can delete bookings" });
     }
 
- 
     await User.findByIdAndUpdate(booking.user, {
       $pull: { bookings: booking._id },
     });
@@ -254,18 +252,28 @@ const getUserBookingsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const start = (page - 1) * limit;
+    const end = start + limit;
 
-    const bookings = await Booking.find({ user: req.user._id })
-      .populate("room", "roomType pricePerNight amenities images")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: "bookings",
+        populate: {
+          path: "room",
+          select: "roomType pricePerNight amenities images",
+        },
+      })
+      .select("bookings");
 
-    const total = await Booking.countDocuments({ user: req.user._id });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const total = user.bookings.length;
+    const paginatedBookings = user.bookings.slice(start, end);
 
     res.status(200).json({
-      bookings,
+      bookings: paginatedBookings,
       pagination: {
         page,
         limit,
@@ -275,8 +283,7 @@ const getUserBookingsController = async (req, res) => {
     });
   } catch (error) {
     console.error("Get user bookings error:", error);
-    const errors = handleErrors(error);
-    res.status(500).json({ error: "Internal server error", errors });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
